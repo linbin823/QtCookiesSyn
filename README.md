@@ -50,12 +50,22 @@ How To Use?
 example:
 
 #include <QtCookieSyn>
+
 int main(int argc, char *argv[])
+
 {
+
     QGuiApplication app(argc, argv);
+
     QtWebView::initialize();
+
     QQmlApplicationEngine engine;
+
     START_COOKIE_SYN(engine,12345)
+
     engine.load(QUrl(QStringLiteral("qrc:/qml/xmlhttprequest.qml")));
+
     return app.exec();
+
 }
+
