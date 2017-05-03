@@ -2,9 +2,6 @@
 #define QMLNETWORKACCESSMANAGERFACTORY_H
 #include <QQmlNetworkAccessManagerFactory>
 
-
-//QQmlNetworkAccessManagerFactory for QQmlEngine
-//QNetworkAccessManager with cookie function!
 class QMLNetworkAccessManagerFactory : public QQmlNetworkAccessManagerFactory
 {
 public:

@@ -9,7 +9,6 @@
 
 #define COOKIES_FILE "cookies"
 
-class QWebEngineCookieStore;
 class QNetworkCookie;
 class NetworkCookieJar : public QNetworkCookieJar
 {
@@ -19,25 +18,25 @@ public:
     static NetworkCookieJar* Instance();
     //due to QNetworkCookieJar::allCookies() is protected, create a public to fufill same
     QList<QNetworkCookie> getAllCookies()const;
-    void loadStore();
+    //HTML slot
+    Q_INVOKABLE bool setHtmlCookiesFromUrl(const QString& rawString, const QUrl &url);
 public slots:
-    bool deleteCookie(const QNetworkCookie &cookie) override;
-    bool insertCookie(const QNetworkCookie &cookie) override;
     bool setCookiesFromUrl(const QList<QNetworkCookie> &cookieList, const QUrl &url) override;
-    bool updateCookie(const QNetworkCookie &cookie) override;
 
-private slots:
-    void save();
-    void load();
+signals:
+    //HTML signal
+    void synHtmlCookie( const QString& cookieStr );
 
 private:
     explicit NetworkCookieJar(QObject *parent = 0);
     static NetworkCookieJar* _singleton;
-    //dynamic get webEngine default profile's cookie store, to save/remove Chromium Cookies
-    QWebEngineCookieStore *_store;
     QMutex _lock;
-
     QString cookiesDirectory();
+    bool    _setHtmlCookies;
+private slots:
+    void save();
+    void load();
+
 };
 
 inline QDataStream& operator<<(QDataStream& out, const QNetworkCookie cookie){

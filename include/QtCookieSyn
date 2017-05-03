@@ -1,0 +1,24 @@
+#include <QWebSocketServer>
+#include <QWebChannel>
+#include <QDebug>
+#include "../src/networkcookiejar.h"
+#include "../src/websocketclientwrapper.h"
+#include "../src/websockettransport.h"
+#include "../src/qmlnetworkaccessmanagerfactory.h"
+
+#define START_COOKIE_SYN(XXEngine,XXPort) \
+    NetworkCookieJar::Instance(); \
+    XXEngine.setNetworkAccessManagerFactory(new QMLNetworkAccessManagerFactory());\
+    START_CHANNEL_SERVER(XXPort)
+
+#define START_CHANNEL_SERVER(XXPORT) \
+    QWebSocketServer server(QStringLiteral("QtWebChannelServer"),\
+                            QWebSocketServer::NonSecureMode);\
+    if (!server.listen(QHostAddress::LocalHost, XXPORT)){\
+        qFatal("Failed to open web socket server.");\
+        return 1;}\
+    WebSocketClientWrapper clientWrapper(&server);\
+    QWebChannel channel;\
+    QObject::connect(&clientWrapper, &WebSocketClientWrapper::clientConnected,\
+                     &channel, &QWebChannel::connectTo);\
+    channel.registerObject(QStringLiteral("appCookieManager"), NetworkCookieJar::Instance());

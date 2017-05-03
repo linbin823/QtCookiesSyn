@@ -1,5 +1,3 @@
-#include "networkcookiejar.h"
-
 #include <QFile>
 #include <QDir>
 #include <QStandardPaths>
@@ -8,21 +6,17 @@
 #include <QNetworkCookie>
 #include <QSettings>
 #include <QMutexLocker>
-
-#ifndef Q_OS_ANDROID
-#include <QWebEngineProfile>
-#include <QWebEngineCookieStore>
-#endif
+#include "networkcookiejar.h"
+#include "cookieprasetools_p.h"
 
 NetworkCookieJar* NetworkCookieJar::_singleton = nullptr;
 
 NetworkCookieJar::NetworkCookieJar(QObject *parent):QNetworkCookieJar(parent){
-    loadStore();
+    _setHtmlCookies = false;
     load();
 }
 
 NetworkCookieJar::~NetworkCookieJar(){
-    save();
 }
 
 NetworkCookieJar* NetworkCookieJar::Instance(){
@@ -37,49 +31,44 @@ QList<QNetworkCookie> NetworkCookieJar::getAllCookies() const
     return this->allCookies();
 }
 
-void NetworkCookieJar::loadStore(){
-#ifndef Q_OS_ANDROID
-    // Save cookies profile shared
-    QWebEngineProfile::defaultProfile()->setPersistentCookiesPolicy(QWebEngineProfile::ForcePersistentCookies);
-    _store = QWebEngineProfile::defaultProfile()->cookieStore();
-    connect(_store, &QWebEngineCookieStore::cookieAdded, this, &NetworkCookieJar::insertCookie);
-    connect(_store, &QWebEngineCookieStore::cookieRemoved,this,&NetworkCookieJar::deleteCookie);
-    _store->loadAllCookies();
-#endif
-}
-
-bool NetworkCookieJar::deleteCookie(const QNetworkCookie &cookie) {
-    qDebug()<<Q_FUNC_INFO<<cookie.name()<<cookie.value();
-    return QNetworkCookieJar::deleteCookie(cookie);
-}
-
-bool NetworkCookieJar::insertCookie(const QNetworkCookie &cookie) {
-    qDebug()<<Q_FUNC_INFO<<cookie.name()<<cookie.value();
-    return QNetworkCookieJar::insertCookie(cookie);
+bool NetworkCookieJar::setHtmlCookiesFromUrl(const QString& rawString, const QUrl &url){
+    QList<QNetworkCookie> ret = CookiePraseToolsPrivate::parseHtmlCookies(rawString);
+//    qDebug()<<Q_FUNC_INFO<<rawString<<ret;
+    if(ret.length() != 0){
+        //set cookies to current cookieJar
+        _setHtmlCookies = true;
+        bool res = setCookiesFromUrl(ret, url);
+        _setHtmlCookies = false;
+        return res;
+    }
+    return false;
 }
 
 bool NetworkCookieJar::setCookiesFromUrl(const QList<QNetworkCookie> &cookieList, const QUrl &url) {
-    qDebug()<<Q_FUNC_INFO<<cookieList.length()<<url;
-    if( QNetworkCookieJar::setCookiesFromUrl(cookieList, url) ){
-        save();
-        return true;
-    }
-    return false;
-}
-
-bool NetworkCookieJar::updateCookie(const QNetworkCookie &cookie) {
-    qDebug()<<Q_FUNC_INFO<<cookie.name()<<cookie.value();
-    if( QNetworkCookieJar::updateCookie(cookie) ){
-        save();
-        return true;
-    }
-    return false;
-}
-
-
-void NetworkCookieJar::save(){
     //mutex
     QMutexLocker locker(&_lock);
+    if( QNetworkCookieJar::setCookiesFromUrl(cookieList, url) ){
+        //to tell the Html to synchronize cookies
+        if(!_setHtmlCookies){
+            qDebug()<<Q_FUNC_INFO<<"from QML cookies:"<<cookieList.length()<<url;
+            //avoid loop
+            foreach(QNetworkCookie it, cookieList){
+                if( !it.name().isEmpty() || !it.name().isNull() ){
+                    emit synHtmlCookie( CookiePraseToolsPrivate::getHtmlCookieStr(it) );
+                }
+            }
+        }
+        else{
+            qDebug()<<Q_FUNC_INFO<<"from Html cookies:"<<cookieList.length()<<url;
+        }
+        //save to loacl storage
+        save();
+        return true;
+    }
+    return false;
+}
+
+void NetworkCookieJar::save(){
     QString directory = cookiesDirectory();
     if (!QFile::exists(directory)) {
         QDir dir;
@@ -89,7 +78,6 @@ void NetworkCookieJar::save(){
     QSettings cookieSettings(location, QSettings::IniFormat);
     cookieSettings.setValue(QLatin1String("cookies"), QVariant::fromValue(getAllCookies()));
     cookieSettings.sync();
-    qDebug()<<Q_FUNC_INFO<<QVariant::fromValue(getAllCookies());
 }
 
 void NetworkCookieJar::load(){
@@ -103,14 +91,8 @@ void NetworkCookieJar::load(){
     QVariant data = cookieSettings.value(QLatin1String("cookies"));
     QList<QNetworkCookie> cookies = qvariant_cast<QList<QNetworkCookie> >( data );
     cookieSettings.sync();
-    qDebug()<<Q_FUNC_INFO<<cookies.size();
+    qDebug()<<Q_FUNC_INFO<<cookies;
     setAllCookies(cookies);
-    // Now user iterate and add it to chromium
-#ifndef Q_OS_ANDROID
-    for (auto cookie : cookies) {
-       _store->setCookie(cookie);
-    }
-#endif
 }
 
 QString NetworkCookieJar::cookiesDirectory(){

@@ -47,82 +47,76 @@ import QtQuick.Layouts 1.1
 ApplicationWindow{
 
     id: window
-    title: qsTr("Hello World")
-    width: 360
+    title: qsTr("Test for cookie")
+    width: 800
     height: 640
     visible: true
 
     WebView{
         //This is for android pageView
-        anchors.fill: parent
-        url: "http://www.baidu.com"
+        width: parent.width / 2
+        height: parent.height
+        url: "../html/index.html"
     }
 
-//    WebEngineView {
-//        //This is for webEngine, not support in Android!
-//        anchors.fill: parent
-//        url: "http://www.baidu.com"
-//    }
+    Rectangle {
+        //This is for XMLHttpRequest()
+        id: content
+        width: parent.width / 2
+        height: parent.height
+        x:parent.width / 2
+        function showRequestInfo(text) {
+            log.text = log.text + "\n" + text
+            //console.log(text)
+        }
+        Flickable{
+            anchors.fill: parent
+            contentHeight: log.height
+            contentWidth:  log.width
+            flickableDirection: Flickable.VerticalFlick
+            Text {
+                id: log;
+                width: parent.width
+                height: log.contentHeight
+                anchors.top: parent.top
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.margins: 10
+                wrapMode: Text.Wrap
+            }
 
+        }
 
-//    Rectangle {
-//        //This is for XMLHttpRequest()
-//        id: content
-//        anchors.fill: parent
-//        function showRequestInfo(text) {
-//            log.text = log.text + "\n" + text
-//            //console.log(text)
-//        }
-//        Flickable{
-//            anchors.fill: parent
-//            contentHeight: log.height
-//            contentWidth:  log.width
-//            flickableDirection: Flickable.VerticalFlick
-//            Text {
-//                id: log;
-//                width: parent.width
-//                height: log.contentHeight
-//                anchors.top: parent.top
-//                anchors.horizontalCenter: parent.horizontalCenter
-//                anchors.margins: 10
-//                wrapMode: Text.Wrap
-//            }
+        Rectangle {
+            id: button
+            anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.margins: 10
+            width: buttonText.width + 10; height: buttonText.height + 10
+            border.width: mouseArea.pressed ? 2 : 1
+            radius : 5; antialiasing: true
 
-//        }
+            Text { id: buttonText; anchors.centerIn: parent; text: "Request data.xml" }
 
-//        Rectangle {
-//            id: button
-//            anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.margins: 10
-//            width: buttonText.width + 10; height: buttonText.height + 10
-//            border.width: mouseArea.pressed ? 2 : 1
-//            radius : 5; antialiasing: true
+            MouseArea {
+                id: mouseArea
+                anchors.fill: parent
+                onClicked: {
+                    log.text = ""
+                    var doc = new XMLHttpRequest();
+                    doc.onreadystatechange = function() {
+                        if (doc.readyState == XMLHttpRequest.DONE) {
+                            content.showRequestInfo("response headers -->");
+                            content.showRequestInfo(doc.getAllResponseHeaders ());
+                            content.showRequestInfo("responseText");
+                            content.showRequestInfo(doc.responseText)
+                            content.showRequestInfo("responseXML");
+                            content.showRequestInfo(doc.responseXML)
+                        }
+                    }
 
-//            Text { id: buttonText; anchors.centerIn: parent; text: "Request data.xml" }
+                    doc.open("GET", "http://www.baidu.com/");//"data.xml");
+                    doc.send();
 
-//            MouseArea {
-//                id: mouseArea
-//                anchors.fill: parent
-//                onClicked: {
-//                    log.text = ""
-//                    console.log("\n")
-
-//                    var doc = new XMLHttpRequest();
-//                    doc.onreadystatechange = function() {
-//                        if (doc.readyState == XMLHttpRequest.DONE) {
-//                            content.showRequestInfo("response headers -->");
-//                            content.showRequestInfo(doc.getAllResponseHeaders ());
-//                            content.showRequestInfo("responseText");
-//                            content.showRequestInfo(doc.responseText)
-//                            content.showRequestInfo("responseXML");
-//                            content.showRequestInfo(doc.responseXML)
-//                        }
-//                    }
-
-//                    doc.open("GET", "http://www.baidu.com/");//"data.xml");
-//                    doc.send();
-
-//                }
-//            }
-//        }
-//    }
+                }
+            }
+        }
+    }
 }

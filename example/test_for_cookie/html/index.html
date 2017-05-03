@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <script type="text/javascript" src="./qwebchannel.js"></script>
+        <script type="text/javascript">
+            function output(message){
+                var output = document.getElementById("output");
+                output.innerHTML = output.innerHTML + message + "\n";
+            }
+            window.onload = function() {
+                document.cookie="userId=828";
+                document.cookie="userName=hulk";
+                document.cookie="H_PS_PSSID=22584_1426_21122_18560_17001; path=/; domain=.baidu.com"
+                document.getElementById("connect").onclick = function(){
+                    var baseUrl = "ws://localhost:12345";
+                    output("Connecting to WebSocket server at " + baseUrl + ".");
+                    var socket = new WebSocket(baseUrl);
+
+                    socket.onclose = function(){
+                        console.error("web channel closed");
+                    };
+                    socket.onerror = function(error){
+                        console.error("web channel error: " + error);
+                    };
+                    socket.onopen = function(){
+                        output("WebSocket connected, setting up QWebChannel.");
+                        new QWebChannel(socket, function(channel){
+                            window.cookieMgr = channel.objects.appCookieManager;
+                            document.getElementById("write").onclick = function(){
+                                var input = document.getElementById("input");
+                                var text = input.value;
+                                if (!text){
+                                    text = document.cookie;
+                                }
+                                output("Sent message: " + text+"\n");
+                                input.value = "";
+                                cookieMgr.setHtmlCookiesFromUrl(text, window.location.protocol + window.location.host );
+                            }
+                            window.cookieMgr.synHtmlCookie.connect(function(message){
+                                output("Add cookie from qt:  " + message+"\n");
+                                document.cookie=message;
+                            });
+                        });
+                        output("Connected to WebChannel, ready to send/receive messages!");
+                    }
+                 }
+             }
+            //END SETUP
+        </script>
+        <style type="text/css">
+            html {
+                height: 100%;
+                width: 100%;
+            }
+            #output {
+                width: 360px;
+                height: 500px;
+                margin: 0 10px 0 0;
+            }
+            #input {
+                width: 360px;
+                height: 40px;
+            }
+            #connect {
+                width: 120px;
+                margin: 0;
+            }
+            #write {
+                width: 120px;
+                margin: 0;
+            }
+        }
+        </style>
+    </head>
+    <body>
+        <textarea id="output"></textarea><br />
+        <input id="input" >
+        <input type="submit" id="connect" value="Connect" onclick="javascript:click();" />
+        <input type="submit" id="write" value="write" onclick="javascript:click();" />
+    </body>
+</html>
