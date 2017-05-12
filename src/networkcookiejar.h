@@ -38,33 +38,4 @@ private slots:
     void load();
 
 };
-
-inline QDataStream& operator<<(QDataStream& out, const QNetworkCookie cookie){
-    out<<cookie.domain()<<cookie.expirationDate()<<cookie.isHttpOnly()<<cookie.isSecure()
-      <<cookie.name()<<cookie.path()<<cookie.value();
-    return out;
-}
-inline QDataStream& operator>>(QDataStream& in, QNetworkCookie& cookie){
-    QString tempStr;
-    QDateTime tempDT;
-    bool tempBool;
-    QByteArray tempBA;
-
-    in>>tempStr;
-    cookie.setDomain(tempStr);
-    in>>tempDT;
-    cookie.setExpirationDate(tempDT);
-    in>>tempBool;
-    cookie.setHttpOnly(tempBool);
-    in>>tempBool;
-    cookie.setSecure(tempBool);
-    in>>tempBA;
-    cookie.setName(tempBA);
-    in>>tempStr;
-    cookie.setPath(tempStr);
-    in>>tempBA;
-    cookie.setValue(tempBA);
-    return in;
-}
-
 #endif // NETWORKCOOKIEJAR_H
