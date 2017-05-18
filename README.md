@@ -19,11 +19,15 @@ This library is about to solve the following problems:
 
 Approach & Principle
 
-For QML, replace the default `networkAccessManagerFactory` of QML Engine. This factoy class can generate a `networkAccessManager` which contains a singleton cookieJar(cookie manager). The singleton cookieJar can handle and store all cookies process by the networkAccessManagers. (For any QML component, whenever HTTP access needed, it turns to QMLEngine. QMLEngine will use the networkAccessManagerFactory to generate a networkAccessManager for service.) Then, after got reply, cookies will be sent to the cookieJar automatically.
+In Qt, each network access is handled by an individual `networkAccessManager` instance. And each `networkAccessManager` has a default `cookieJar` component which handles cookies.
+
+Create a user-defined cookieJar(cookie manager), implement cookies' save and load functions, make it as a singleton instance. Replace all `networkAccessManager` 's default `cookieJar` component with this user-defined cookieJar.
+
+In Qml engine, replace the default `networkAccessManagerFactory`. This new factoy class can generate a `networkAccessManager` which contains a singleton `cookieJar`. The `cookieJar` can handle and store all cookies process by the networkAccessManagers. (For any QML component, whenever HTTP access needed, it turns to QMLEngine. QMLEngine will use the networkAccessManagerFactory to generate a networkAccessManager for service.) Then, after got reply, cookies will be sent to the cookieJar automatically.
 
 (obsolete)For WebEngine, it use WebEngineCookieStore to store cookies. CookieJar can automatically synchronize cookies with WebEngineCookieStore. But not functional for android, because WebEngine module is not supported in android(currently Qt5.8.0).
 
-For html, using QWebChannel to transport message between HTML and C++. On C++ side, expose the singleton `NetworkCookieJar` Instance to JavaScript. On html side, using proper event handler such as window.onload() to save cookies to C++, using the handler for signal `synHtmlCookie` of javascript instance `NetworkCookieJar` to set cookies from C++.
+For html, using QWebChannel to transport message between HTML and C++. On C++ side, expose the singleton `cookieJar` to JavaScript. On html side, using proper event handler such as window.onload() to save cookies to C++. On the other hand, html utilize the signal `synHtmlCookie` send from C++ side to set cookies from C++.
 
 
 Roles
@@ -32,6 +36,8 @@ Roles
 
 2.Class `NetworkCookieJar`, inherit from `QNetworkCookieJar`, is used to handle with cookies. Singleton, fufill cookies's save, load, insert, delete, update functions. 
 Expose to html. 
+
+
 SLOT for HTML: Q_INVOKABLE bool setHtmlCookiesFromUrl(const QString& rawString, const QUrl &url). 
 SIGNAL for HTML: void synHtmlCookie( const QString& cookieStr ).
 
@@ -49,7 +55,7 @@ How To Use?
 
 example:
 
-#include <QtCookieSyn>
+#include `<QtCookieSyn>`
 
 int main(int argc, char *argv[])
 
