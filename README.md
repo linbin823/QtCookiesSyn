@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
 
-    START_COOKIE_SYN(engine,12345)
+    START_COOKIE_SYN_WITH_WEB(engine,12345)
 
     engine.load(QUrl(QStringLiteral("qrc:/qml/xmlhttprequest.qml")));
 

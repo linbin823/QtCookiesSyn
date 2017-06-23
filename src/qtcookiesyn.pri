@@ -17,4 +17,5 @@ HEADERS +=  \
     $$PWD/websocketclientwrapper.h \
     $$PWD/cookieprasetools_p.h
 
-DISTFILES +=
+DISTFILES += \
+    $$PWD/../README.md
