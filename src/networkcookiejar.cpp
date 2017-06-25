@@ -4,10 +4,11 @@
 #include <QtDebug>
 #include <QTextStream>
 #include <QNetworkCookie>
-#include <QSettings>
+//#include <QSettings>
 #include <QMutexLocker>
 #include "networkcookiejar.h"
 #include "cookieprasetools_p.h"
+#include "loadsaveprocessorxml.h"
 
 NetworkCookieJar* NetworkCookieJar::_singleton = nullptr;
 
@@ -75,23 +76,75 @@ void NetworkCookieJar::save(){
         dir.mkpath(directory);
     }
     const QString location = directory + QDir::separator() + COOKIES_FILE;
-    QSettings cookieSettings(location, QSettings::IniFormat);
-    cookieSettings.setValue(QLatin1String("cookies"), QVariant::fromValue(getAllCookies()));
-    cookieSettings.sync();
+    //using QSettings & QVariant to stroe cookies, but not readable for human
+    //    QSettings cookieSettings(location, QSettings::IniFormat);
+    //    cookieSettings.setValue(QLatin1String("cookies"), QVariant::fromValue(getAllCookies()));
+    //    cookieSettings.sync();
+
+    //human-readable format
+    loadSaveProcessorXml* processor = new loadSaveProcessorXml(this,false);
+    processor->init();
+    processor->writeValue("cookies number",list.size() );
+    QList<QNetworkCookie> list = getAllCookies();
+    for(int i=0;i<list.size();i++){
+        processor->moveToInstance("cookies",QString::number(i));
+        processor->writeValue("domain",list[i].domain() );
+        processor->writeValue("expireDateTime",list[i].expirationDate() );
+        processor->writeValue("httpOnly",list[i].isHttpOnly() );
+        processor->writeValue("secure",list[i].isSecure() );
+        processor->writeValue("name", list[i].name());
+        processor->writeValue("path", list[i].path());
+        processor->writeValue("value", list[i].value());
+        processor->moveBackToParent();
+    }
+    processor->saveFile(location);
+    processor->deleteLater();
 }
 
 void NetworkCookieJar::load(){
     //mutex
     QMutexLocker locker(&_lock);
     // load cookies and exceptions
-    qRegisterMetaTypeStreamOperators<QList<QNetworkCookie> >("QList<QNetworkCookie>");
     const QString location = cookiesDirectory() + QDir::separator() + COOKIES_FILE;
-    QSettings cookieSettings(location, QSettings::IniFormat);
-    cookieSettings.sync();
-    QVariant data = cookieSettings.value(QLatin1String("cookies"));
-    QList<QNetworkCookie> cookies = qvariant_cast<QList<QNetworkCookie> >( data );
-    cookieSettings.sync();
-    qDebug()<<Q_FUNC_INFO<<cookies;
+
+//    qRegisterMetaTypeStreamOperators<QList<QNetworkCookie> >("QList<QNetworkCookie>");
+//    QSettings cookieSettings(location, QSettings::IniFormat);
+//    cookieSettings.sync();
+//    QVariant data = cookieSettings.value(QLatin1String("cookies"));
+//    QList<QNetworkCookie> cookies = qvariant_cast<QList<QNetworkCookie> >( data );
+//    cookieSettings.sync();
+
+    //read human-readable format
+    loadSaveProcessorXml* processor = new loadSaveProcessorXml(this,false);
+    processor->loadFile(location);
+    QList<QNetworkCookie> cookies;
+    int number;
+    processor->readValue("cookies number",number );
+    for(int i=0;i<number;i++){
+        QNetworkCookie one;
+        processor->moveToInstance("cookies",QString::number(i));
+        QString tempString;
+        processor->readValue("domain",tempString );
+        one.setDomain(tempString);
+        QDateTime tempDateTime;
+        processor->writeValue("expireDateTime",tempDateTime );
+        one.setExpirationDate(tempDateTime);
+        bool tempBool;
+        processor->writeValue("httpOnly",tempBool );
+        one.setHttpOnly(tempBool);
+        processor->writeValue("secure",tempBool );
+        one.setSecure(tempBool);
+        QByteArray tempBA;
+        processor->writeValue("name", tempBA);
+        one.setName( tempBA );
+        processor->writeValue("path", tempString);
+        one.setPath( tempString );
+        processor->writeValue("value", tempBA );
+        one.setValue( tempBA );
+
+        cookies.append(one);
+        processor->moveBackToParent();
+    }
     setAllCookies(cookies);
 }
 

@@ -19,3 +19,6 @@ HEADERS +=  \
 
 DISTFILES += \
     $$PWD/../README.md
+
+#to serial/deserial objects in xml or jason fomat
+include(../lib/loadSaveProcessor/src/loadsaveProcessor.pri)
