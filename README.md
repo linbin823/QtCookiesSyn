@@ -53,7 +53,7 @@ How To Use?
 
 1. include QtCookieSyn. 
 2. create QQmlEngine
-3. using MARCRO: START_COOKIE_SYN_WITH_WEB(x,y)
+3. using MARCRO: START_COOKIE_SYN_WITH_HTML(x,y)
 	x is instance of QQmlEngine
         y is WebSocket port, used by html page.
 4. if you do NOT want expose to html, you could us MARCRO: START_COOKIE_SYN(x)
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
 
-    START_COOKIE_SYN_WITH_WEB(engine,12345)
+    START_COOKIE_SYN_WITH_HTML(engine,12345)
 
     engine.load(QUrl(QStringLiteral("qrc:/qml/xmlhttprequest.qml")));
 
