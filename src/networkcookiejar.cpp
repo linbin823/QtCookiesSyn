@@ -85,16 +85,16 @@ void NetworkCookieJar::save(){
     QList<QNetworkCookie> list = getAllCookies();
     loadSaveProcessorXml* processor = new loadSaveProcessorXml(this,false);
     processor->init();
-    processor->writeValue("cookies number", list.size() );
+    processor->writeValue("cookiesNumber", list.size() );
     for(int i=0;i<list.size();i++){
         processor->moveToInstance("cookies",QString::number(i));
         processor->writeValue("domain",  list[i].domain());
         processor->writeValue("expireDateTime", list[i].expirationDate());
         processor->writeValue("httpOnly", list[i].isHttpOnly());
         processor->writeValue("secure",list[i].isSecure() );
-        processor->writeValue("name", list[i].name());
+        processor->writeValue("name", QString::fromUtf8(list[i].name()) );
         processor->writeValue("path", list[i].path());
-        processor->writeValue("value", list[i].value());
+        processor->writeValue("value", QString::fromUtf8(list[i].value()) );
         processor->moveBackToParent();
     }
     processor->saveFile(location);
@@ -119,7 +119,7 @@ void NetworkCookieJar::load(){
     processor->loadFile(location);
     QList<QNetworkCookie> cookies;
     int number=0;
-    int ret = processor->readValue("cookies number",number );
+    int ret = processor->readValue("cookiesNumber",number );
     if(ret!=0) return;//value error
     for(int i=0;i<number;i++){
         QNetworkCookie one;
@@ -135,13 +135,12 @@ void NetworkCookieJar::load(){
         one.setHttpOnly(tempBool);
         processor->readValue("secure",tempBool );
         one.setSecure(tempBool);
-        QByteArray tempBA;
-        processor->readValue("name", tempBA);
-        one.setName( tempBA );
+        processor->readValue("name", tempString);
+        one.setName( tempString.toUtf8() );
         processor->readValue("path", tempString);
         one.setPath( tempString );
-        processor->readValue("value", tempBA );
-        one.setValue( tempBA );
+        processor->readValue("value", tempString );
+        one.setValue( tempString.toUtf8() );
 
         cookies.append(one);
         processor->moveBackToParent();
