@@ -82,15 +82,15 @@ void NetworkCookieJar::save(){
     //    cookieSettings.sync();
 
     //human-readable format
+    QList<QNetworkCookie> list = getAllCookies();
     loadSaveProcessorXml* processor = new loadSaveProcessorXml(this,false);
     processor->init();
-    processor->writeValue("cookies number",list.size() );
-    QList<QNetworkCookie> list = getAllCookies();
+    processor->writeValue("cookies number", list.size() );
     for(int i=0;i<list.size();i++){
         processor->moveToInstance("cookies",QString::number(i));
-        processor->writeValue("domain",list[i].domain() );
-        processor->writeValue("expireDateTime",list[i].expirationDate() );
-        processor->writeValue("httpOnly",list[i].isHttpOnly() );
+        processor->writeValue("domain",  list[i].domain());
+        processor->writeValue("expireDateTime", list[i].expirationDate());
+        processor->writeValue("httpOnly", list[i].isHttpOnly());
         processor->writeValue("secure",list[i].isSecure() );
         processor->writeValue("name", list[i].name());
         processor->writeValue("path", list[i].path());
@@ -118,8 +118,9 @@ void NetworkCookieJar::load(){
     loadSaveProcessorXml* processor = new loadSaveProcessorXml(this,false);
     processor->loadFile(location);
     QList<QNetworkCookie> cookies;
-    int number;
-    processor->readValue("cookies number",number );
+    int number=0;
+    int ret = processor->readValue("cookies number",number );
+    if(ret!=0) return;//value error
     for(int i=0;i<number;i++){
         QNetworkCookie one;
         processor->moveToInstance("cookies",QString::number(i));
@@ -127,19 +128,19 @@ void NetworkCookieJar::load(){
         processor->readValue("domain",tempString );
         one.setDomain(tempString);
         QDateTime tempDateTime;
-        processor->writeValue("expireDateTime",tempDateTime );
+        processor->readValue("expireDateTime",tempDateTime );
         one.setExpirationDate(tempDateTime);
         bool tempBool;
-        processor->writeValue("httpOnly",tempBool );
+        processor->readValue("httpOnly",tempBool );
         one.setHttpOnly(tempBool);
-        processor->writeValue("secure",tempBool );
+        processor->readValue("secure",tempBool );
         one.setSecure(tempBool);
         QByteArray tempBA;
-        processor->writeValue("name", tempBA);
+        processor->readValue("name", tempBA);
         one.setName( tempBA );
-        processor->writeValue("path", tempString);
+        processor->readValue("path", tempString);
         one.setPath( tempString );
-        processor->writeValue("value", tempBA );
+        processor->readValue("value", tempBA );
         one.setValue( tempBA );
 
         cookies.append(one);

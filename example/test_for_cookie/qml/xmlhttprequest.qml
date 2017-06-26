@@ -112,7 +112,7 @@ ApplicationWindow{
                         }
                     }
 
-                    doc.open("GET", "http://www.baidu.com/");//"data.xml");
+                    doc.open("GET", "http://www.baidu.com/");
                     doc.send();
 
                 }
