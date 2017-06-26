@@ -7,12 +7,12 @@
 #include "../src/qmlnetworkaccessmanagerfactory.h"
 
 #define START_COOKIE_SYN_WITH_HTML(XXEngine,XXPort) \
-    START_COOKIE_SYN(XXEngine);
+    START_COOKIE_SYN(XXEngine); \
     START_CHANNEL_SERVER(XXPort);
 
 #define START_COOKIE_SYN(XXEngine) \
     NetworkCookieJar::Instance(); \
-    XXEngine.setNetworkAccessManagerFactory(new QMLNetworkAccessManagerFactory());\
+    XXEngine.setNetworkAccessManagerFactory(new QMLNetworkAccessManagerFactory());
 
 #define START_CHANNEL_SERVER(XXPORT) \
     QWebSocketServer server(QStringLiteral("QtWebChannelServer"),\
