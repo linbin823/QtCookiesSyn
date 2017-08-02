@@ -56,7 +56,7 @@ ApplicationWindow{
         //This is for android pageView
         width: parent.width / 2
         height: parent.height
-        url: "../html/index.html"
+        url: "file:///android_asset/html/index.html"
     }
 
     Rectangle {

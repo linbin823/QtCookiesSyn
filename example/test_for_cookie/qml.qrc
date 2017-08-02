@@ -1,7 +1,5 @@
 <RCC>
     <qresource prefix="/">
         <file>qml/xmlhttprequest.qml</file>
-        <file>html/qwebchannel.js</file>
-        <file>html/index.html</file>
     </qresource>
 </RCC>
