@@ -21,4 +21,4 @@ DISTFILES += \
     $$PWD/../README.md
 
 #to serial/deserial objects in xml or jason fomat
-include(../lib/loadSaveProcessor/src/loadsaveProcessor.pri)
+include(3rd-party/loadSaveProcessor/src/loadsaveProcessor.pri)
